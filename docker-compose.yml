@@ -1,0 +1,65 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: freshers-adda-backend
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-5000}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - freshers-adda-network
+    volumes:
+      - ./logs:/usr/src/app/logs
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: freshers-adda-postgres
+    environment:
+      POSTGRES_DB: freshers_adda
+      POSTGRES_USER: freshers_adda
+      POSTGRES_PASSWORD: freshers_adda_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freshers_adda -d freshers_adda"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freshers-adda-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: freshers-adda-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freshers-adda-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  freshers-adda-network:
+    driver: bridge
