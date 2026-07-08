@@ -17,12 +17,15 @@
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml,prisma}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml,prisma}\"",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
+    "prisma:generate": "prisma generate --schema prisma",
+    "prisma:migrate": "prisma migrate dev --schema prisma",
+    "prisma:deploy": "prisma migrate deploy --schema prisma",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "prepare": "husky"
+  },
+  "prisma": {
+    "schema": "./prisma"
   },
   "keywords": [
     "freshers-adda",

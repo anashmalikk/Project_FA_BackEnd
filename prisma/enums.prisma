@@ -1,0 +1,43 @@
+enum JobStatus {
+  LIVE
+  DRAFT
+  CLOSED
+  EXPIRED
+}
+
+enum JobType {
+  jobs
+  internship
+  competition
+}
+
+enum Region {
+  online
+  offline
+  hybrid
+}
+
+enum RoundStatus {
+  LIVE
+  NOT_STARTED
+  COMPLETED
+}
+
+enum RoundType {
+  screening
+  interview
+  assignment
+  finalize
+}
+
+
+enum UserRole { 
+    ADMIN 
+    USER 
+    RECRUITER 
+} 
+enum UserStatus { 
+    ACTIVE 
+    INACTIVE 
+    SUSPENDED 
+}

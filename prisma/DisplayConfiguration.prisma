@@ -1,0 +1,23 @@
+model DisplayConfiguration{
+
+  id String @id @default(cuid())
+
+  jobId String @unique
+
+  job Job      @relation(fields:[jobId], references:[id])
+
+  headerType Int?
+
+  footerType Int?
+
+  showTags Boolean
+
+  showRounds Boolean
+
+  showEligibility Boolean
+
+  showGallery Boolean
+
+  showPrize Boolean
+
+}

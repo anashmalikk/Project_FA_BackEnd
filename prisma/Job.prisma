@@ -1,0 +1,39 @@
+model Job {
+  id              String   @id @default(cuid())
+
+  apiId           Int      @unique
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  title           String
+
+  visibility      String
+  type            JobType
+  subtype         String?
+
+  status          JobStatus
+
+  region          Region
+
+  publicUrl       String?
+  seoUrl          String?
+
+  description     String @db.Text
+
+  startDate       DateTime?
+  endDate         DateTime?
+
+  playersCount    Int?
+  registerCount   Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registration    RegistrationRequirement?
+  locations       JobLocation[]
+  skills          JobSkill[]
+  rounds          Round[]
+  displayConfig   DisplayConfiguration?
+  images          JobImage[]
+}

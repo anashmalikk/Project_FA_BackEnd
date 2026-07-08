@@ -1,0 +1,33 @@
+model Round {
+
+  id String @id @default(cuid())
+
+  apiId Int @unique
+
+  // Relation
+  jobId String
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // Round Details
+  title String
+  subtype String
+  roundOrder Int
+
+  // Configuration
+  status RoundStatus
+  displayOnly Boolean @default(false)
+  eliminatorRound Boolean @default(true)
+
+  // Schedule
+  startDate DateTime?
+  endDate DateTime?
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  submissionTypes SubmissionType[]
+
+  @@index([jobId])
+}

@@ -35,3 +35,12 @@ docker compose up --build
 ## API Prefix
 
 All API routes are mounted under `/api/v1`.
+
+## Prisma Schema Layout
+
+Prisma models are split across files in `prisma/schema` for easier maintenance:
+
+- `schema.prisma` contains the generator and datasource blocks.
+- Domain files such as `user.prisma`, `auth.prisma`, and `audit.prisma` contain models.
+
+Add new model files to `prisma/schema` and run `npm run prisma:generate`.

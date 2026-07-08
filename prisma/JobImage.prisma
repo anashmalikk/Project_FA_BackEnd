@@ -1,0 +1,13 @@
+model JobImage{
+
+  id String @id @default(cuid())
+
+  jobId String
+
+  job Job      @relation(fields:[jobId], references:[id])
+
+  type String
+
+  url String
+
+}

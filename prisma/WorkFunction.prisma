@@ -1,0 +1,9 @@
+model WorkFunction{
+
+  id String @id @default(cuid())
+
+  apiId Int?
+
+  name String
+
+}

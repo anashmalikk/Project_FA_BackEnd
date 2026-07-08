@@ -1,0 +1,15 @@
+model CustomRegistrationField{
+
+  id String @id @default(cuid())
+
+  registrationId String
+
+  registration RegistrationRequirement      @relation(fields:[registrationId], references:[id])
+
+  title String
+
+  type String
+
+  mandatory Boolean
+
+}

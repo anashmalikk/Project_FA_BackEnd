@@ -1,0 +1,17 @@
+model SubmissionType{
+
+  id String @id @default(cuid())
+
+  roundId String
+
+  round Round      @relation(fields:[roundId], references:[id])
+
+  title String
+
+  type String
+
+  mandatory Boolean
+
+  acceptedValues String?
+
+}

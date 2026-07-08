@@ -1,0 +1,16 @@
+model Organization {
+  id            String   @id @default(cuid())
+  apiId         Int      @unique
+
+  name          String
+  description   String?
+  website       String?
+  publicUrl     String?
+  logo          String?
+  logoLarge     String?
+
+  jobs          Job[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

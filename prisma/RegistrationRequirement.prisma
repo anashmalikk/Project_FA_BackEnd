@@ -1,0 +1,44 @@
+model RegistrationRequirement {
+
+  id String @id @default(cuid())
+
+  // Relation
+  jobId String @unique
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // Team Configuration
+  isTeamRegistration Boolean @default(false)
+  minTeamSize Int @default(1)
+  maxTeamSize Int @default(1)
+
+  // Registration Window
+  registrationStart DateTime
+  registrationEnd DateTime
+
+  // Verification Requirements
+  requireEmailVerification Boolean @default(true)
+  requireMobileVerification Boolean @default(false)
+
+  // Authentication Options
+  allowSocialLogin Boolean @default(true)
+
+  // Registration Settings
+  allowEditAfterSubmission Boolean @default(false)
+  allowMultipleSubmission Boolean @default(false)
+  autoApproveRegistration Boolean @default(true)
+
+  // Registration Status
+  registrationStatus String @default("OPEN")
+
+  // Optional Display
+  registrationMessage String?
+  remainingDays String?
+
+  // Relations
+  coreFields CoreRequiredField[]
+  customFields CustomRegistrationField[]
+  eligibility Eligibility?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
