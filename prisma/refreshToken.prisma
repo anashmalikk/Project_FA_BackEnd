@@ -1,0 +1,10 @@
+model refreshToken {
+  id         String   @id @db.VarChar(255)
+  userId     String   @db.VarChar(255)
+  tokenHash  String   @db.VarChar(255)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt(now())
+
+  @@map("refreshToken")
+}
