@@ -1,7 +1,7 @@
 model Job {
   id              String   @id @default(cuid())
 
-  apiId           Int      @unique
+  apiId           String
 
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id])

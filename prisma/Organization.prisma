@@ -1,6 +1,6 @@
 model Organization {
   id            String   @id @default(cuid())
-  apiId         Int      @unique
+  apiId         String      @unique
 
   name          String
   description   String?

@@ -32,4 +32,45 @@ export class JobController {
       next(error);
     }
   }
+
+  public static async getJobDetail(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const id = req.params['id'];
+      const job = await prisma.job.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          organization: true,
+          locations: true,
+          skills: true,
+          rounds: true,
+          registration: true,
+          displayConfig: true,
+          images: true
+        }
+      });
+      if (!job) {
+        res.status(404).json({
+          success: false,
+          message: "Job not found",
+          data: null
+        });
+      }
+      else {
+        res.status(200).json({
+          success: true,
+          message: "Job fetched successfully",
+          data: job
+        });
+      }
+    }
+    catch (error) {
+      next(error);
+    }
+  }
 }

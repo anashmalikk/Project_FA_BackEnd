@@ -31,6 +31,9 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "coverage"],
+  "ts-node": {
+    "files": true
+  }
 }

@@ -19,7 +19,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => 
     isValidationError || isKnownError ? error.message : "Internal server error";
 
   logger.error("Request failed", {
-    requestId: req.requestId,
+    requestId: req?.requestId,
     statusCode,
     message,
     stack: error instanceof Error ? error.stack : undefined
@@ -28,7 +28,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => 
   const response: ErrorResponse = {
     success: false,
     message,
-    requestId: req.requestId
+    requestId: req?.requestId
   };
 
   if (isValidationError) {

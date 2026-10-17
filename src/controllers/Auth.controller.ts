@@ -1,9 +1,10 @@
-import type { Request, Response } from "express";
+import type { CookieOptions, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { z } from "zod";
+import { env } from "@/config";
 import { prisma } from "@/database/prisma";
 // import { sendEmail } from "@/lib/mailer"; // 👈 wire up your mail provider (Resend/SendGrid/SES/etc.)
 
@@ -12,7 +13,7 @@ import { prisma } from "@/database/prisma";
  * (RefreshToken + PasswordResetToken models, related back to User).
  *
  * REQUIRED env vars:
- *   JWT_ACCESS_SECRET
+ *   JWT_SECRET
  *   JWT_REFRESH_SECRET
  *   ACCESS_TOKEN_TTL     (e.g. "15m")
  *   REFRESH_TOKEN_TTL_MS (e.g. "604800000" -> 7 days, used for both JWT + cookie + DB row)
@@ -21,8 +22,8 @@ import { prisma } from "@/database/prisma";
  *   NODE_ENV
  */
 
-const ACCESS_SECRET = process.env["JWT_ACCESS_SECRET"] ?? process.env["JWT_SECRET"];
-const REFRESH_SECRET = process.env["JWT_REFRESH_SECRET"];
+const ACCESS_SECRET = env.JWT_SECRET;
+const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 const ACCESS_TTL = process.env["ACCESS_TOKEN_TTL"] ?? "15m";
 const REFRESH_TTL_MS = Number(process.env["REFRESH_TOKEN_TTL_MS"] ?? 7 * 24 * 60 * 60 * 1000);
 const RESET_TTL_MIN = Number(process.env["RESET_TOKEN_TTL_MIN"] ?? 30);
@@ -87,20 +88,48 @@ const signAccessToken = (userId: string, role: string) =>
     expiresIn: ACCESS_TTL as SignOptions["expiresIn"]
   });
 
-const REFRESH_COOKIE_OPTS = {
+const COOKIE_SCOPE: CookieOptions = {
   httpOnly: true,
-  secure: process.env["NODE_ENV"] === "production",
-  sameSite: "strict" as const,
-  path: "/api/auth",
+  secure: env.NODE_ENV === "production" || env.COOKIE_SAME_SITE === "none",
+  sameSite: env.COOKIE_SAME_SITE,
+  path: env.API_PREFIX,
+  ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {})
+};
+
+const ACCESS_COOKIE_OPTS: CookieOptions = {
+  ...COOKIE_SCOPE,
+  maxAge: 15 * 60 * 1000
+};
+
+const REFRESH_COOKIE_OPTS: CookieOptions = {
+  ...COOKIE_SCOPE,
   maxAge: REFRESH_TTL_MS,
+};
+
+const setAccessCookie = (res: Response, token: string) => {
+  res.cookie("accessToken", token, ACCESS_COOKIE_OPTS);
 };
 
 const setRefreshCookie = (res: Response, token: string) => {
   res.cookie("refreshToken", token, REFRESH_COOKIE_OPTS);
 };
 
+const clearAccessCookie = (res: Response) => {
+  res.clearCookie("accessToken", COOKIE_SCOPE);
+};
+
 const clearRefreshCookie = (res: Response) => {
-  res.clearCookie("refreshToken", { path: "/api/auth" });
+  res.clearCookie("refreshToken", COOKIE_SCOPE);
+};
+
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  setAccessCookie(res, accessToken);
+  setRefreshCookie(res, refreshToken);
+};
+
+const clearAuthCookies = (res: Response) => {
+  clearAccessCookie(res);
+  clearRefreshCookie(res);
 };
 
 const getHeaderValue = (value: string | string[] | undefined): string | undefined =>
@@ -139,7 +168,7 @@ const issueSession = async (userId: string) => {
   const rawRefreshToken = crypto.randomBytes(40).toString("hex");
   await prisma.refreshToken.create({
     data: {
-      tokenHash: rawRefreshToken,
+      tokenHash: hashToken(rawRefreshToken),
       userId,
       expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
     },
@@ -178,7 +207,7 @@ export class AuthController {
       const refreshToken = await issueSession(user.id);
 
       await logAudit(user.id, "REGISTER", req);
-      setRefreshCookie(res, refreshToken);
+      setAuthCookies(res, accessToken, refreshToken);
 
       return res.status(201).json({
         success: true,
@@ -195,7 +224,6 @@ export class AuthController {
   /** POST /api/auth/login */
   public static async login(req: Request, res: Response) {
     const parsed = loginSchema.safeParse(req.body);
-    console.log(parsed);
     if (!parsed.success) {
       return res.status(400).json({ success: false, message: "Invalid input" });
     }
@@ -203,19 +231,16 @@ export class AuthController {
 
     try {
       const user = await prisma.user.findUnique({ where: { email } });
-      console.log("user is found");
       // Always hash-compare against *something*, even if the user doesn't exist,
       // so response timing doesn't leak whether the email is registered.
       const passwordHashToCheck = user?.password ?? "$2b$12$invalidsaltinvalidsaltinvalidsalt.......";
       const isPasswordCorrect = await verifyPassword(password, passwordHashToCheck);
 
       if (!user || !isPasswordCorrect) {
-        console.log("password is incorrect",user);
         return res.status(401).json({ success: false, message: GENERIC_AUTH_ERROR });
       }
 
       if (user.status !== "ACTIVE") {
-        console.log("account is not active");
         return res.status(403).json({ success: false, message: "This account is not active" });
       }
 
@@ -228,7 +253,7 @@ export class AuthController {
       });
       await logAudit(user.id, "LOGIN", req);
 
-      setRefreshCookie(res, refreshToken);
+      setAuthCookies(res, accessToken, refreshToken);
       return res.status(200).json({
         success: true,
         message: "Login successful",
@@ -253,13 +278,13 @@ export class AuthController {
       const stored = await prisma.refreshToken.findUnique({ where: { tokenHash } });
 
       if (!stored || stored.expiresAt < new Date()) {
-        clearRefreshCookie(res);
+        clearAuthCookies(res);
         return res.status(401).json({ success: false, message: "Session expired, please log in again" });
       }
 
       const user = await prisma.user.findUnique({ where: { id: stored.userId } });
       if (user?.status !== "ACTIVE") {
-        clearRefreshCookie(res);
+        clearAuthCookies(res);
         return res.status(401).json({ success: false, message: "Session expired, please log in again" });
       }
 
@@ -268,11 +293,11 @@ export class AuthController {
       const newRefreshToken = await issueSession(user.id);
       const newAccessToken = signAccessToken(user.id, user.role);
 
-      setRefreshCookie(res, newRefreshToken);
+      setAuthCookies(res, newAccessToken, newRefreshToken);
       return res.status(200).json({ success: true, accessToken: newAccessToken });
     } catch (error) {
       console.error("[AuthController.refresh]", error);
-      clearRefreshCookie(res);
+      clearAuthCookies(res);
       return res.status(401).json({ success: false, message: "Session expired, please log in again" });
     }
   }
@@ -289,7 +314,7 @@ export class AuthController {
       // Non-fatal — still clear the cookie client-side below.
     }
 
-    clearRefreshCookie(res);
+    clearAuthCookies(res);
     return res.status(200).json({ success: true, message: "Logged out" });
   }
 
@@ -301,7 +326,7 @@ export class AuthController {
     try {
       await prisma.refreshToken.deleteMany({ where: { userId: req.userId } });
       await logAudit(req.userId, "LOGOUT_ALL", req);
-      clearRefreshCookie(res);
+      clearAuthCookies(res);
       return res.status(200).json({ success: true, message: "Logged out of all devices" });
     } catch (error) {
       console.error("[AuthController.logoutAll]", error);
@@ -379,7 +404,7 @@ export class AuthController {
       ]);
 
       await logAudit(stored.userId, "PASSWORD_RESET_COMPLETED", req);
-      clearRefreshCookie(res);
+      clearAuthCookies(res);
       return res.status(200).json({ success: true, message: "Password reset successful, please log in" });
     } catch (error) {
       console.error("[AuthController.resetPassword]", error);
@@ -416,7 +441,7 @@ export class AuthController {
       ]);
 
       await logAudit(user.id, "PASSWORD_CHANGED", req);
-      clearRefreshCookie(res);
+      clearAuthCookies(res);
       return res.status(200).json({ success: true, message: "Password changed, please log in again" });
     } catch (error) {
       console.error("[AuthController.changePassword]", error);
