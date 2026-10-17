@@ -26,7 +26,10 @@ export const createApp = (): express.Application => {
   app.use(securityHeadersMiddleware);
   app.use(
     cors({
-      origin: env.CORS_ORIGIN,
+      origin: [
+        "https://fafront.netlify.app/",
+        "http://localhost:3000/"
+      ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "x-request-id"]
