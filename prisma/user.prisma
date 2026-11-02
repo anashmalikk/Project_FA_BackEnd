@@ -24,4 +24,5 @@ model Role {
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  permissions Json?
 }
