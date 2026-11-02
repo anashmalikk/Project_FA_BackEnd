@@ -1,18 +1,11 @@
-model JobLocation{
-
-  id String @id @default(cuid())
-
-  jobId String
-
-  job Job      @relation(fields:[jobId], references:[id])
-
-  city String
-  state String
-  country String
-
-  latitude Decimal?
+model JobLocation {
+  id        String   @id @default(cuid())
+  jobId     String
+  city      String
+  state     String
+  country   String
+  latitude  Decimal?
   longitude Decimal?
-
   sortOrder Int?
-
+  job       Job      @relation(fields: [jobId], references: [id])
 }

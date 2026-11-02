@@ -1,13 +1,9 @@
 model Eligibility {
-
-  id String @id @default(cuid())
-
-  registrationId String @unique
-  registration RegistrationRequirement      @relation(fields:[registrationId], references:[id])
-
-  sector String?
-  experience String?
-  gender String?
-  locationType String?
-
+  id             String                  @id @default(cuid())
+  registrationId String                  @unique
+  sector         String?
+  experience     String?
+  gender         String?
+  locationType   String?
+  registration   RegistrationRequirement @relation(fields: [registrationId], references: [id])
 }

@@ -186,8 +186,6 @@ export class AdminController {
                     organization: {
                         connect: { id: organizationId },
                     },
-
-                    // Keep your other existing relation fields here
                 },
             });
             res.status(201).json({

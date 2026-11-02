@@ -1,32 +1,21 @@
 model CoreRequiredField {
-
-  id String @id @default(cuid())
-
+  id             String                  @id @default(cuid())
   registrationId String
-  registration RegistrationRequirement @relation(fields: [registrationId], references: [id], onDelete: Cascade)
-
-  // Display
-  fieldName String
-  label String?
-  placeholder String?
-
-  // Input
-  fieldType String
-
-  // Validation
-  mandatory Boolean @default(true)
-  required Boolean @default(true)
-  minLength Int?
-  maxLength Int?
-  pattern String?
-
-  // UI
-  defaultValue String?
-  helpText String?
-  displayOrder Int @default(1)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fieldName      String
+  label          String?
+  placeholder    String?
+  fieldType      String
+  mandatory      Boolean                 @default(true)
+  required       Boolean                 @default(true)
+  minLength      Int?
+  maxLength      Int?
+  pattern        String?
+  defaultValue   String?
+  helpText       String?
+  displayOrder   Int                     @default(1)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  registration   RegistrationRequirement @relation(fields: [registrationId], references: [id], onDelete: Cascade)
 
   @@index([registrationId])
 }

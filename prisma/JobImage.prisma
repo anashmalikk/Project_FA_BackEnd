@@ -1,13 +1,7 @@
-model JobImage{
-
-  id String @id @default(cuid())
-
+model JobImage {
+  id    String @id @default(cuid())
   jobId String
-
-  job Job      @relation(fields:[jobId], references:[id])
-
-  type String
-
-  url String
-
+  type  String
+  url   String
+  job   Job    @relation(fields: [jobId], references: [id])
 }

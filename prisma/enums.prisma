@@ -3,6 +3,8 @@ enum JobStatus {
   DRAFT
   CLOSED
   EXPIRED
+  DOWN
+  Reopen
 }
 
 enum JobType {
@@ -31,14 +33,14 @@ enum RoundType {
   finalize
 }
 
+enum UserRole {
+  ADMIN
+  USER
+  RECRUITER
+}
 
-enum UserRole { 
-    ADMIN 
-    USER 
-    RECRUITER 
-} 
-enum UserStatus { 
-    ACTIVE 
-    INACTIVE 
-    SUSPENDED 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
