@@ -23,7 +23,7 @@ const environmentSchema = z.object({
   COOKIE_DOMAIN: z.string().min(1).optional(),
   AWS_ACCESS_KEY: z.string().min(1),
   AWS_SECRET_KEY: z.string().min(1),
-  AWS_REGION: z.string().min(1),
+  AWS_REGION: z.string().min(1)|| 'ap-south-1',
   AWS_BUCKET: z.string().min(1)
 });
 
