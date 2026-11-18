@@ -3,12 +3,32 @@ import { prisma } from "@/database/prisma";
 
 export class JobController {
   public static async getJobAll(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     try {
+      const page = Math.max(1, Number(req.query["page"]) || 1);
+      const limit = Math.min(
+        100,
+        Math.max(1, Number(req.query["limit"]) || 10)
+      );
+
+      const skip = (page - 1) * limit;
+      const search =
+        typeof req.query["search"] === "string"
+          ? req.query["search"].trim()
+          : "";
+      const where = search
+        ? {
+          title: {
+            contains: search,
+            mode: "insensitive" as const
+          }
+        }
+        : {};
       const jobs = await prisma.job.findMany({
+        where,
         orderBy: {
           createdAt: "desc"
         },
@@ -20,13 +40,18 @@ export class JobController {
           registration: true,
           displayConfig: true,
           images: true
-        }
+        },
+        skip,
+        take: limit,
+
       });
+      const count = await prisma.job.count({where});
 
       res.status(200).json({
         success: true,
         message: "Jobs fetched successfully",
-        data: jobs
+        data: jobs,
+        total: count
       });
     } catch (error) {
       next(error);
